@@ -95,11 +95,20 @@ Everything is **integer paise**. `formatPaise()` renders Indian grouping.
 
 ## Mapping the wireframe onto the contract
 
-Wireframe: page 2, "Jama", of the **Interlock Wireframes** canvas.
-<https://claude.ai/code/artifact/72b1b404-48d3-479f-9b67-b6c8e6dcb6bc>
+Wireframes: **Assay Wireframes**, seven artboards.
+<https://claude.ai/code/artifact/a90a7e4e-4afb-4ebf-a051-2b13bc1e9704>
 
-*(The product is now called **Assay**. The artboard still says Jama — the layout
-is unchanged, only the wordmark.)*
+The screen (default), the line drawer, the report sheet, the three window
+states, loading/error/empty, mobile at 390, and a reference sheet carrying the
+tokens, component anatomy and the scope. Every number on those artboards comes
+from this repo's mock. This supersedes page 2 of the old Interlock Wireframes
+canvas — ignore that one.
+
+**Scope, locked:** one route `/s/[settlementId]`. Three zones (verdict header
+with the window strip, the waterfall, the ceiling panel), two overlays (line
+drawer, report sheet), and a forecast strip below the fold. No landing page, no
+settlement list, no settings, no auth, no gateway-connect flow, no policy page —
+the policy is reachable through any citation chip.
 
 | Wireframe element | Field |
 |---|---|
