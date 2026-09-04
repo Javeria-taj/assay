@@ -13,12 +13,13 @@
     "verify": "tsx tools/verify-contract.ts",
     "verify:mock": "node tools/with-mock.mjs tsx tools/verify-contract.ts",
     "test": "pnpm --filter @assay/contract test",
-    "typecheck": "tsc -b --pretty false",
+    "typecheck": "tsc --pretty false",
     "fixtures:build": "tsx tools/build-fixtures.ts",
     "fixtures:check": "tsx tools/build-fixtures.ts && git diff --exit-code -- tools/fixtures.generated.json"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
   }
 }

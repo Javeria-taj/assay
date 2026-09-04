@@ -85,7 +85,7 @@ export function createClient(opts: ClientOptions) {
 
     const parsed = endpoints[name].response.safeParse(json);
     if (!parsed.success) throw new AssayContractError(name, parsed.error.issues);
-    return (parsed.data as { data: DataOf<N> }).data;
+    return (parsed.data as unknown as { data: DataOf<N> }).data;
   }
 
   return {

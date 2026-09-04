@@ -17,7 +17,7 @@ export const CONTRACT_VERSION = "0.1.0";
 
 /* ----------------------------------------------------------------- scalars */
 
-export const Paise = z.number().int();
+export const PaiseSchema = z.number().int();
 export const EpochMs = z.number().int().nonnegative();
 /** Fraction 0..1, 4dp. 0.3376 = 33.76%. */
 export const Share = z.number().min(0).max(1);
@@ -109,12 +109,12 @@ export const InstrumentSlice = z.object({
   displayLabel: z.string(),
   /** What the merchant's own report calls it. The collapse is the point. */
   reportedAs: z.string(),
-  grossCaptured: Paise,
+  grossCaptured: PaiseSchema,
   paymentCount: z.number().int().nonnegative(),
   /** Statutory network MDR in basis points. 0 for bank-account UPI. */
   networkMdrBps: z.number().int().nonnegative(),
   /** What this merchant was actually charged on this slice, under her plan. */
-  feeCharged: Paise,
+  feeCharged: PaiseSchema,
   /** True when this slice is indistinguishable from another in her report. */
   collapsedInReport: z.boolean(),
   citation: Citation,
@@ -156,12 +156,12 @@ export const ExplanationLine = z.object({
   kind: LineKind,
   label: z.string(),
   /** Signed paise. Deductions negative. gross_captured and net_credited are markers. */
-  amount: Paise,
+  amount: PaiseSchema,
   /** Balance after applying this line. net_credited.runningBalance === netCredited. */
-  runningBalance: Paise,
+  runningBalance: PaiseSchema,
   /** Unit count where the line is a per-event charge (1,100 failed attempts). */
   count: z.number().int().nonnegative().nullable().default(null),
-  unitAmount: Paise.nullable().default(null),
+  unitAmount: PaiseSchema.nullable().default(null),
   basis: Basis,
   citation: Citation,
 
@@ -204,11 +204,11 @@ export const Merchant = z.object({
 export const Reconciliation = z.object({
   ok: z.boolean(),
   /** Sum of the signed lines. */
-  computedNet: Paise,
+  computedNet: PaiseSchema,
   /** What the rail says landed. */
-  statedNet: Paise,
+  statedNet: PaiseSchema,
   /** computedNet - statedNet. Must be 0 to the paise or the build fails. */
-  delta: Paise,
+  delta: PaiseSchema,
 });
 export type Reconciliation = z.infer<typeof Reconciliation>;
 
@@ -221,13 +221,13 @@ export const Explanation = z.object({
   settledAt: EpochMs,
   merchant: Merchant,
 
-  grossCaptured: Paise,
-  netCredited: Paise,
+  grossCaptured: PaiseSchema,
+  netCredited: PaiseSchema,
   /** What she expected: gross − headline rate − refunds. Her mental model. */
-  merchantExpected: Paise,
+  merchantExpected: PaiseSchema,
   expectationBasis: z.string(),
   /** merchantExpected − netCredited. The number on the front of the video. */
-  unexplainedGap: Paise,
+  unexplainedGap: PaiseSchema,
 
   lines: z.array(ExplanationLine).min(2),
   instrumentMix: z.array(InstrumentSlice),
@@ -242,13 +242,13 @@ export const MissingField = z.object({
   id: z.string(),
   name: z.string(),
   whyItMatters: z.string(),
-  /** Paise of delta that would become basis-verifiable if this field existed. */
-  wouldResolve: Paise,
+  /** PaiseSchema of delta that would become basis-verifiable if this field existed. */
+  wouldResolve: PaiseSchema,
   citation: Citation,
 });
 export type MissingField = z.infer<typeof MissingField>;
 
-export const CeilingBucket = z.object({ amount: Paise, share: Share });
+export const CeilingBucket = z.object({ amount: PaiseSchema, share: Share });
 
 /**
  * The explainability ceiling, on two axes that must not be conflated:
@@ -258,7 +258,7 @@ export const CeilingBucket = z.object({ amount: Paise, share: Share });
 export const Ceiling = z.object({
   settlementId: SettlementId,
   /** grossCaptured − netCredited. The whole delta, not just the surprise. */
-  totalDelta: Paise,
+  totalDelta: PaiseSchema,
   amountReconciled: CeilingBucket,
   amountUnreconciled: CeilingBucket,
   basisVerifiable: CeilingBucket,
@@ -268,9 +268,9 @@ export const Ceiling = z.object({
   headline: z.string(),
   method: z.string(),
   zeroMdrExposure: z.object({
-    grossOnZeroMdrRails: Paise,
-    feeLeviedOnZeroMdrRails: Paise,
-    annualisedFee: Paise,
+    grossOnZeroMdrRails: PaiseSchema,
+    feeLeviedOnZeroMdrRails: PaiseSchema,
+    annualisedFee: PaiseSchema,
     note: z.string(),
     citations: z.array(Citation).min(1),
   }),
@@ -308,11 +308,11 @@ export const DiscrepancyReport = z.object({
     z.object({
       lineId: z.string(),
       statement: z.string(),
-      amount: Paise,
+      amount: PaiseSchema,
       citation: Citation,
     }),
   ),
-  disputedTotal: Paise,
+  disputedTotal: PaiseSchema,
 });
 export type DiscrepancyReport = z.infer<typeof DiscrepancyReport>;
 
@@ -322,15 +322,15 @@ export const Forecast = z.object({
   cycleId: CycleId,
   asOf: EpochMs,
   expectedSettlementAt: EpochMs,
-  capturedSoFar: Paise,
+  capturedSoFar: PaiseSchema,
   /** Same deterministic engine as `explain`, run forward. Not a model. */
-  projectedNet: Paise,
+  projectedNet: PaiseSchema,
   projectedLines: z.array(ExplanationLine),
   backtest: z.object({
     method: z.literal("policy_engine_replay"),
     cycles: z.number().int().nonnegative(),
-    medianAbsError: Paise,
-    maxAbsError: Paise,
+    medianAbsError: PaiseSchema,
+    maxAbsError: PaiseSchema,
     note: z.string(),
   }),
 });
@@ -344,7 +344,7 @@ export const PolicyLine = z.object({
   appliesTo: z.string(),
   /** Exactly one of rateBps / fixedAmount / readFromApi is meaningful. */
   rateBps: z.number().int().nullable().default(null),
-  fixedAmount: Paise.nullable().default(null),
+  fixedAmount: PaiseSchema.nullable().default(null),
   readFromApi: z.string().nullable().default(null),
   quote: z.string(),
   url: z.string().url().nullable().default(null),
@@ -376,10 +376,10 @@ export const SettlementSummary = z.object({
   cycleId: CycleId,
   cycleLabel: z.string(),
   settledAt: EpochMs,
-  grossCaptured: Paise,
-  netCredited: Paise,
-  merchantExpected: Paise,
-  unexplainedGap: Paise,
+  grossCaptured: PaiseSchema,
+  netCredited: PaiseSchema,
+  merchantExpected: PaiseSchema,
+  unexplainedGap: PaiseSchema,
   windowStatus: WindowStatus,
   basisUnverifiableShare: Share,
 });
