@@ -17,7 +17,8 @@
     "typecheck": "tsc --pretty false",
     "build": "pnpm --filter @assay/web build",
     "fixtures:build": "tsx tools/build-fixtures.ts",
-    "fixtures:check": "tsx tools/build-fixtures.ts && git diff --exit-code -- tools/fixtures.generated.json"
+    "fixtures:check": "tsx tools/build-fixtures.ts && git diff --exit-code -- tools/fixtures.generated.json",
+    "spike:razorpay": "tsx scripts/spike-razorpay.mts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

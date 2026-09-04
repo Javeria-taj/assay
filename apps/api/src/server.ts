@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { CONTRACT_VERSION, Health } from "@assay/contract";
 import { ApiProblem, SOURCE, envelope, onError, refuse, reply, type Vars } from "./envelope.js";
+import { SourceConfigError, createSource } from "./sources/index.js";
 
 /**
  * The Assay API.
@@ -11,6 +12,20 @@ import { ApiProblem, SOURCE, envelope, onError, refuse, reply, type Vars } from 
  * refused before it reaches a route. This batch serves /v1/health only; the
  * rest of the contract lands in later batches.
  */
+
+/* Resolved before the server binds a port. A source that cannot be read is a
+ * refusal to start, not a request-time surprise. */
+const source = (() => {
+  try {
+    return createSource();
+  } catch (e) {
+    if (e instanceof SourceConfigError) {
+      console.error("\n[assay:api] " + e.message + "\n");
+      process.exit(1);
+    }
+    throw e;
+  }
+})();
 
 const app = new Hono<{ Variables: Vars }>();
 app.onError(onError);
@@ -71,7 +86,7 @@ const port = Number(process.env.PORT ?? 4318);
 
 serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, (info) => {
   console.log("assay api  ·  http://localhost:" + info.port + "  ·  contract " + CONTRACT_VERSION);
-  console.log("  source " + SOURCE + "  ·  cors " + (origins.length ? origins.join(", ") : "(none allowed)"));
+  console.log("  source " + SOURCE + " (" + source.kind + ")  ·  cors " + (origins.length ? origins.join(", ") : "(none allowed)"));
   console.log("  GET /v1/health");
 });
 

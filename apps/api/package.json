@@ -12,6 +12,7 @@
     "@assay/contract": "workspace:*",
     "@hono/node-server": "^1.14.0",
     "hono": "^4.6.14",
+    "razorpay": "^2.9.8",
     "tsx": "^4.19.2"
   }
 }
