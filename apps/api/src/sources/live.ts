@@ -1,5 +1,5 @@
 import Razorpay from "razorpay";
-import type { Instrument } from "@assay/contract";
+import type { Instrument } from "../domain/instrument.js";
 import type {
   CapturedPayment,
   CycleRef,
@@ -84,6 +84,27 @@ function instrumentFromReport(row: ReconRow): Instrument | null {
   }
 }
 
+/** The accounting period as a contract-shaped cycle id: cyc_YYYYMM. */
+const cycleIdFor = (settledAt: number): string => {
+  const d = new Date(settledAt);
+  return "cyc_" + d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, "0");
+};
+
+/**
+ * The rail authenticates a key, not a merchant profile: it exposes no name,
+ * no segment and — the one that matters — no pricing plan. `headlineBps` is
+ * what she believes she is on, and without it there is no "expected" to
+ * compare against. Recorded as a gap on the cycle rather than invented.
+ */
+const UNKNOWN_MERCHANT = {
+  id: "merchant_live",
+  name: "This account",
+  segment: "unknown",
+  planLabel: "unknown",
+  headlineBps: 0,
+  constructed: false,
+} as const;
+
 /** What her own report calls it — the collapse, carried rather than resolved. */
 function reportedAs(row: ReconRow): string {
   switch (row.method) {
@@ -122,6 +143,7 @@ export class LiveSettlementSource implements SettlementSource {
       const settledAt = ms(s.created_at);
       return {
         id: s.id,
+        cycleId: cycleIdFor(settledAt),
         label: new Date(settledAt).toLocaleDateString("en-IN", {
           month: "long",
           year: "numeric",
@@ -209,6 +231,7 @@ export class LiveSettlementSource implements SettlementSource {
 
     if (unresolvedUpi > 0) {
       gaps.push({
+        id: "gap_instrument_sub_type_upi",
         field: "instrument_sub_type",
         lookedIn: "settlement recon report row (`method` is the only instrument field on it)",
         consequence:
@@ -218,6 +241,7 @@ export class LiveSettlementSource implements SettlementSource {
     }
     if (unresolvedOther > 0) {
       gaps.push({
+        id: "gap_instrument_sub_type_card",
         field: "instrument_sub_type",
         lookedIn: "settlement recon report row (`card_type` absent or unrecognised)",
         consequence: "Row carried at the family level; per-instrument fee attribution is not checkable for it.",
@@ -228,11 +252,23 @@ export class LiveSettlementSource implements SettlementSource {
     /* Failed attempts never settle, so they are absent from a settlement recon
      * report by construction. They are chargeable all the same. */
     gaps.push({
+      id: "gap_failed_attempt_count",
       field: "failed_attempt_count",
       lookedIn: "settlement recon report (contains settled transactions only)",
       consequence:
         "Failed attempts are not counted from the settlement. They would have to come from the payments list, which the report gives no way to scope to this cycle.",
       affectedCount: 0,
+    });
+
+    /* No endpoint returns the merchant's own pricing plan, so "what she
+     * expected" has no rate to be computed from on the live path. */
+    gaps.push({
+      id: "gap_merchant_plan_rate",
+      field: "merchant_headline_rate",
+      lookedIn: "settlement, recon report and account endpoints",
+      consequence:
+        "The plan she believes she is on is not exposed, so merchantExpected cannot be derived and the gap she would notice cannot be stated.",
+      affectedCount: 1,
     });
 
     const onDemandSettlements = await this.#onDemand();
@@ -241,6 +277,8 @@ export class LiveSettlementSource implements SettlementSource {
 
     return {
       id: settlement.id,
+      cycleId: cycleIdFor(settledAt),
+      merchant: { ...UNKNOWN_MERCHANT },
       label: when.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" }),
       periodStart: times.length ? Math.min(...times) : settledAt,
       periodEnd: times.length ? Math.max(...times) : settledAt,

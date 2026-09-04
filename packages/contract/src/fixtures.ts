@@ -495,7 +495,7 @@ export const CEILING: Ceiling = {
       id: "instrument_subtype",
       name: "Instrument sub-type",
       whyItMatters:
-        'Bank-account UPI carries 0% network MDR by statute, RuPay credit on UPI around 2%, and PPI on UPI 1.1% above ₹2,000. All three arrive in merchant reports labelled identically as "UPI", so no merchant can check which rail carried which rupee.',
+        "Bank-account UPI carries 0% network MDR by statute, RuPay-credit-on-UPI around 2%, and PPI-on-UPI 1.1% above ₹2,000. The rail knows which is which — `payment.upi.payer_account_type` carries exactly those three values. The settlement recon report does not: it carries `method`, which reads \"UPI\" for all three. Recovering the distinction means joining all 960 settled rows back to their payments, one call each.",
       wouldResolve: rupees(18_000),
       citation: CITATIONS.upiCollapse,
     },

@@ -67,32 +67,28 @@ located *inside* a month and then filtered back out of it by `settlement_id`.
 The adapter fetches the month and filters. Worth knowing before Batch 4 designs
 around a per-settlement fetch that does not exist.
 
-### The instrument sub-type is genuinely absent from the settlement report — and the product's phrasing needs tightening
+### We said the instrument sub-type does not exist. It does — and the real finding is better
 
-This is the product's own finding turning up in our own code, and it is more
-interesting than expected.
+We claimed the instrument sub-type did not exist. It does — on the payment
+entity, as `upi.payer_account_type`, with exactly the three values the fee
+analysis turns on. What it is missing from is the settlement recon report,
+which is the artifact a merchant actually reconciles against.
 
-The recon report row — the thing closest to what the merchant is actually given
-— carries `method` (`card` / `netbanking` / `wallet` / `emi` / `upi`) and, for
-cards, `card_type` and `card_network`. It carries **nothing** that separates
-bank-account UPI from RuPay-credit-on-UPI from PPI-on-UPI. Those three carry
-materially different statutory MDR and arrive indistinguishable. Confirmed at
-the type level: `payer_account_type` appears nowhere in the settlement typings.
+So the ceiling is not a data-availability problem, it is a placement problem:
+the field exists, it is not where the decision is made, and moving it there
+costs one API call per settled transaction. That reframing survives a reader
+who knows the API, and it sharpens the ask from "collect this field" to "put
+`payer_account_type` on the recon row."
 
-But the *payment* entity is documented to carry `upi.payer_account_type` with
-exactly the three values `bank_account | credit_card | wallet`. So the field is
-not missing from the rail — it is missing from the settlement report, and
-recovering it means joining every settled row back to its payment one at a time.
-
-Two consequences. First, `README.md` and `docs/assay_context.md` say the field
-"does not exist"; the defensible claim is that it does not exist *on the report
-she is given*, which is a sharper point and survives contact with someone who
-knows the API. Second, `payer_account_type` is absent from the official Node
-SDK's typings altogether, so even the join needs a cast around the SDK.
+Confirmed at the type level: `payer_account_type` appears nowhere in the
+settlement typings, and the recon row carries only `method` — which reads
+`UPI` for all three rails. It is also absent from the official Node SDK's
+typings altogether, so even the per-payment join needs a cast around the SDK.
 
 The adapter refuses to guess: `instrumentFromReport` returns null for UPI and
 the cycle carries a `SourceGap` naming the field, where it was looked for, and
-how many rows are affected.
+how many rows are affected. Corrected in `README.md` (both tables),
+`docs/assay_context.md` (both tables) and the fixture copy.
 
 ### Failed attempts cannot come from a settlement at all
 
@@ -111,3 +107,86 @@ The one piece of good news, and the one §4.1 depends on. The
 The design rule — read the rupees the rail returned rather than a rate we typed
 in — holds against the actual API, and the live adapter reads both fields
 directly with no rate anywhere near them.
+
+---
+
+## Wave 0 — freezing the seam
+
+### Two Batch 2 types had to change, and this was the last moment they could
+
+`SourceGap` had no `id`. `ComputedLine.derivedFromGaps` and
+`MissingFieldResult.gapId` both need something to point at, and the whole
+ceiling mechanism depends on that pointer: without it, "these three missing
+fields do not overlap and sum to the whole" is a claim in prose rather than
+something a test can assert. Added `id`, gave the live driver stable ones.
+
+`RawCycle` imported `Instrument` from `@assay/contract`. The seam's rule is
+that nothing below the route layer knows the public contract, so the domain now
+declares its own `Instrument` and `to-contract.ts` asserts the two unions agree
+at compile time. `RawCycle`'s shape is unchanged — only where the name comes
+from. Both changes are extensions rather than redesigns, and both are the kind
+of thing that becomes a two-person decision from here on.
+
+### `basisVerifiable` is derived in one place, and that is the ceiling
+
+The temptation is to let each line say whether it is checkable. That makes the
+ceiling an opinion. Instead `computedLine()` derives it —
+`derivedFromGaps.length === 0` — and it is the only place in the codebase that
+decides. A line is checkable exactly when its basis leans on no gap the adapter
+reported, so the ceiling falls out of what the rail could not answer. If the
+rail starts answering, the number moves on its own and nobody edits a
+percentage.
+
+The factory also refuses to build an unverifiable line that cannot say which
+field is missing, which is contract invariant 6 enforced at construction rather
+than checked at the edge.
+
+### The golden test is committed failing, on purpose
+
+`pnpm test:golden` runs seven assertions against `computeSettlement` and all
+seven fail with `the calculator stream owns this`. That is the gate working:
+it fails for the right reason, not a type error or a bad import, so the moment
+the calculator lands the test tells the truth about whether it reproduces §3.4
+to the paisa. Kept out of `pnpm test` so CI stays green while wave 1 is in
+flight.
+
+### Reviewing the seam from each stream's seat found five real holes
+
+Before freezing, four reviewers each took one wave-1 stream's seat and tried to
+build it against the types. Between them they raised 15 blockers. An
+adversarial verify pass then refuted all forty findings — which was itself the
+finding: the refuter had been told to default to refuted when uncertain, and a
+refuter with that instruction returns zero every time. A verification pass that
+cannot fail is not verification. Checked the blockers by hand instead.
+
+Five were real, and all five were in types written an hour earlier:
+
+`ComputedInstrumentSlice` had no `id`, while `MissingFieldResult` carries
+`attributableSliceIds: string[]` to point at slices. The ceiling stream would
+have had nothing to assert the partition against — the exact property that
+makes "these three do not overlap" checkable rather than asserted.
+
+`CycleRef` carried one `id`, but the frozen contract enforces `stl_` and `cyc_`
+prefixes on two separate fields and neither derives from the other. The
+calculator could not have produced both.
+
+`tax_on_fees` said "applied to the sum of fee lines", which reads unambiguous
+and is not: taxing the gateway fee alone gives ₹4,320 and taxing every fee line
+gives ₹5,094. The canonical figure is the former. Two streams would have
+disagreed by ₹774 and both would have thought they were right, so the line now
+names `taxableLineIds` explicitly.
+
+`networkMdrBps` was required on every slice with no source anywhere in the
+domain — no rail returns statutory MDR. It is reference data, so it now lives
+in `domain/instrument.ts` as a table rather than being invented per-stream.
+
+`Backtest.medianAbsError` was a required number, so a forecast with zero
+backtested cycles had to report zero error — precisely what contract invariant
+10 forbids. Both error fields are now nullable.
+
+Two more surfaced that are worth stating rather than fixing. The live rail
+exposes no merchant pricing plan at all, so `merchantExpected` has no rate to
+be computed from on the live path — recorded as a gap on the cycle rather than
+invented. And `buildDisputeWindow(settledAt, now)` cannot produce the
+`settlementId` and `clause` its return type requires; the signature came from
+the brief, so it is flagged rather than changed.

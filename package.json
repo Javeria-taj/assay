@@ -14,6 +14,7 @@
     "verify": "tsx tools/verify-contract.ts",
     "verify:mock": "node tools/with-mock.mjs tsx tools/verify-contract.ts",
     "test": "pnpm --filter @assay/contract test",
+    "test:golden": "tsx --test apps/api/src/engine/golden.test.ts",
     "typecheck": "tsc --pretty false",
     "build": "pnpm --filter @assay/web build",
     "fixtures:build": "tsx tools/build-fixtures.ts",

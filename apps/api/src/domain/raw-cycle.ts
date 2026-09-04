@@ -1,4 +1,4 @@
-import type { Instrument } from "@assay/contract";
+import type { Instrument } from "./instrument.js";
 
 /**
  * The calculator's input, in Assay's vocabulary.
@@ -8,15 +8,39 @@ import type { Instrument } from "@assay/contract";
  * upstream field name, envelope or id scheme may appear past this boundary.
  * If a rail cannot supply something, it says so in `gaps` rather than guessing.
  *
- * Money is integer paise throughout, signed the way `@assay/contract` signs it:
- * deductions negative. Time is epoch milliseconds, because the contract is in
- * milliseconds and rails that speak seconds are converted on the way in.
+ * Money is integer paise throughout, deductions negative. Time is epoch
+ * milliseconds; rails that speak seconds are converted on the way in.
+ *
+ * Nothing here imports a schema. The mappers in engine/to-contract.ts are the
+ * only place the public contract is known.
  */
+
+/**
+ * Who the settlement belongs to. The source knows this; the calculator needs
+ * `headlineBps` to compute what she expected, and the contract's Explanation
+ * cannot be built without the rest.
+ */
+export type MerchantRef = {
+  id: string;
+  name: string;
+  segment: string;
+  planLabel: string;
+  /** The headline rate she believes she is on, in bps. 200 = flat 2%. */
+  headlineBps: number;
+  /** Always true while Assay runs on constructed data. Rendered on screen. */
+  constructed: boolean;
+};
 
 /** A cycle we could explain, cheap to list. */
 export type CycleRef = {
-  /** Assay's id for the cycle. Opaque to everything above the source. */
+  /**
+   * The settlement this cycle landed as. Distinct from `cycleId`: the public
+   * contract enforces mutually exclusive prefixes (`stl_` and `cyc_`), so one
+   * id cannot serve both and neither is derivable from the other.
+   */
   id: string;
+  /** The accounting period. Contract-side this is the `cyc_` id. */
+  cycleId: string;
   /** e.g. "August 2026". Rendered, never parsed. */
   label: string;
   periodStart: number;
@@ -90,6 +114,12 @@ export type OnDemandSettlement = {
  * a log line: the ceiling analysis reads it.
  */
 export type SourceGap = {
+  /**
+   * Stable within a cycle. `ComputedLine.derivedFromGaps` and
+   * `MissingFieldResult.gapId` both point here, which is what makes the
+   * ceiling checkable rather than asserted.
+   */
+  id: string;
   /** Assay's name for what is missing, e.g. "instrument_sub_type". */
   field: string;
   /** Where we looked. */
@@ -101,6 +131,7 @@ export type SourceGap = {
 };
 
 export type RawCycle = CycleRef & {
+  merchant: MerchantRef;
   payments: CapturedPayment[];
   refunds: Refund[];
   disputes: Dispute[];

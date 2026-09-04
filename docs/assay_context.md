@@ -173,7 +173,7 @@ The gap between those two numbers is the finding.
 |---|---:|---:|
 | Amount reconciles against the rail's own figures | 100% | ₹71,082.00 |
 | Basis is verifiable from fields she is given | 66.2% | ₹47,082.00 |
-| Basis is **not** verifiable — the field does not exist | 33.8% | ₹24,000.00 |
+| Basis is **not** verifiable from the report she is given | 33.8% | ₹24,000.00 |
 
 The unverifiable third is the ₹24,000 gateway fee. It is exactly correct, and
 she has no way to know that, because it spans five rails carrying different
@@ -185,7 +185,7 @@ whole ₹24,000:
 
 | Missing field | Would resolve | Why it matters |
 |---|---:|---|
-| Instrument sub-type | ₹18,000.00 | Bank-account UPI carries 0% network MDR by statute, RuPay credit on UPI around 2%, PPI on UPI 1.1% above ₹2,000 — all three reach her labelled "UPI" |
+| Instrument sub-type | ₹18,000.00 | Bank-account UPI carries 0% network MDR by statute, RuPay-credit-on-UPI ~2%, and PPI-on-UPI 1.1% above ₹2,000. The rail knows which is which — `payment.upi.payer_account_type` carries exactly those three values. The settlement recon report does not: it carries `method`, which reads `UPI` for all three. Recovering the distinction means joining all 960 settled rows back to their payments, one call each. |
 | Card BIN tier | ₹4,800.00 | Debit, credit, commercial and international BINs carry materially different interchange, and the tier is not on her report |
 | Per-line fee basis | ₹1,200.00 | Each line states an amount but not the base it was computed on, so an ad-valorem charge and a flat one look identical |
 
