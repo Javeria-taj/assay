@@ -14,5 +14,5 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["packages/**/*.ts", "tools/**/*.ts"]
+  "include": ["packages/**/*.ts", "tools/**/*.ts", "apps/api/src/**/*.ts"]
 }

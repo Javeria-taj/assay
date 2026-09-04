@@ -1,0 +1,17 @@
+{
+  "name": "@assay/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Assay API. Read-only, GET-only, contract-checked at the boundary.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@assay/contract": "workspace:*",
+    "@hono/node-server": "^1.14.0",
+    "hono": "^4.6.14",
+    "tsx": "^4.19.2"
+  }
+}

@@ -1,3 +1,10 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+
+# Build scripts we deliberately do not run. Keeps `pnpm install` deterministic
+# and non-interactive on CI and on Render.
+ignoredBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver

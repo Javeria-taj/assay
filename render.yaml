@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: assay-api
+    runtime: node
+    plan: starter
+    region: singapore
+    branch: main
+    autoDeploy: true
+    buildCommand: corepack enable && corepack prepare pnpm@10.28.0 --activate && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter @assay/api start
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ASSAY_SOURCE
+        value: synthetic
+      - key: ASSAY_SEED
+        value: "4217"
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: OPS_TOKEN
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+  - type: web
+    name: assay-web
+    runtime: node
+    plan: starter
+    region: singapore
+    branch: main
+    autoDeploy: true
+    buildCommand: corepack enable && corepack prepare pnpm@10.28.0 --activate && pnpm install --frozen-lockfile && pnpm --filter @assay/web build
+    startCommand: pnpm --filter @assay/web start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_ASSAY_API
+        sync: false
