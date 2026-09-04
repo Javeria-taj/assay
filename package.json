@@ -1,0 +1,24 @@
+{
+  "name": "assay",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Assay tells you what your settlement is actually made of.",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "mock": "node tools/mock-server.mjs",
+    "verify": "tsx tools/verify-contract.ts",
+    "verify:mock": "node tools/with-mock.mjs tsx tools/verify-contract.ts",
+    "test": "pnpm --filter @assay/contract test",
+    "typecheck": "tsc -b --pretty false",
+    "fixtures:build": "tsx tools/build-fixtures.ts",
+    "fixtures:check": "tsx tools/build-fixtures.ts && git diff --exit-code -- tools/fixtures.generated.json"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

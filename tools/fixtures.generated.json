@@ -1,0 +1,1005 @@
+{
+  "contractVersion": "0.1.0",
+  "generatedBy": "tools/build-fixtures.ts",
+  "fixtureSettledAt": 1788413400000,
+  "anchorNow": 1788607800000,
+  "disputeWindowMs": 259200000,
+  "closingThresholdMs": 86400000,
+  "settlementId": "stl_2608mera01",
+  "summary": {
+    "id": "stl_2608mera01",
+    "cycleId": "cyc_202608",
+    "cycleLabel": "August 2026",
+    "settledAt": 1788413400000,
+    "grossCaptured": 120000000,
+    "netCredited": 112891800,
+    "merchantExpected": 114400000,
+    "unexplainedGap": 1508200,
+    "windowStatus": "open",
+    "basisUnverifiableShare": 0.3376
+  },
+  "explanation": {
+    "settlementId": "stl_2608mera01",
+    "cycleId": "cyc_202608",
+    "cycleLabel": "August 2026",
+    "periodStart": 1785522600000,
+    "periodEnd": 1788200999999,
+    "settledAt": 1788413400000,
+    "merchant": {
+      "id": "mer_meera01",
+      "name": "Meera",
+      "segment": "D2C skincare, ₹12L/month",
+      "plan": {
+        "label": "Flat 2% — all instruments",
+        "headlineBps": 200,
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-01",
+          "sourceId": "P-01",
+          "title": "Gateway fee — flat plan, all instruments",
+          "quote": "A flat 2.00% of the captured amount, applied uniformly to every payment instrument.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        }
+      },
+      "constructed": true
+    },
+    "grossCaptured": 120000000,
+    "netCredited": 112891800,
+    "merchantExpected": 114400000,
+    "expectationBasis": "gross − 2% − refunds",
+    "unexplainedGap": 1508200,
+    "lines": [
+      {
+        "id": "L-00",
+        "kind": "gross_captured",
+        "label": "Gross captured",
+        "amount": 120000000,
+        "runningBalance": 120000000,
+        "count": 960,
+        "unitAmount": null,
+        "basis": {
+          "formula": "sum(payment.amount) over payments captured in the cycle",
+          "inputs": [
+            {
+              "label": "Captured payments",
+              "value": "960"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "api_field",
+          "label": "API · payments",
+          "sourceId": "payment.amount",
+          "title": "Gross captured, summed over captured payments in the cycle",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": true,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-01",
+        "kind": "gateway_fee",
+        "label": "Gateway fee at 2%",
+        "amount": -2400000,
+        "runningBalance": 117600000,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "2.00% × gross captured",
+          "inputs": [
+            {
+              "label": "Gross captured",
+              "value": "₹12,00,000.00"
+            },
+            {
+              "label": "Plan rate",
+              "value": "200 bps, flat, all instruments"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-01",
+          "sourceId": "P-01",
+          "title": "Gateway fee — flat plan, all instruments",
+          "quote": "A flat 2.00% of the captured amount, applied uniformly to every payment instrument.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": true,
+        "amountReconciled": true,
+        "basisVerifiable": false,
+        "unverifiableReason": "The total is checkable; its composition is not. This fee is levied across five rails carrying different statutory MDR, and three of them are reported to you identically as \"UPI\". Nothing you are given lets you check which rupee sat on which rail."
+      },
+      {
+        "id": "L-02",
+        "kind": "refund_principal",
+        "label": "Refunds issued (principal)",
+        "amount": -3200000,
+        "runningBalance": 114400000,
+        "count": 41,
+        "unitAmount": null,
+        "basis": {
+          "formula": "sum(refund.amount) over refunds settled in the cycle",
+          "inputs": [
+            {
+              "label": "Refunds settled",
+              "value": "41"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "api_field",
+          "label": "API · refunds",
+          "sourceId": "refund.amount",
+          "title": "Refund principal, summed from the refunds collection",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": true,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-03",
+        "kind": "tax_on_fees",
+        "label": "GST at 18% on the fee",
+        "amount": -432000,
+        "runningBalance": 113968000,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "18% × gateway fee",
+          "inputs": [
+            {
+              "label": "Gateway fee",
+              "value": "₹24,000.00"
+            },
+            {
+              "label": "GST rate",
+              "value": "18%"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-02",
+          "sourceId": "P-02",
+          "title": "GST at 18% on payment-gateway fees",
+          "quote": "Goods and Services Tax at 18% is levied on the gateway fee, not on the transaction value.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": true,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-04",
+        "kind": "failed_payment_fee",
+        "label": "Failed-payment charges",
+        "amount": -330000,
+        "runningBalance": 113638000,
+        "count": 1100,
+        "unitAmount": 300,
+        "basis": {
+          "formula": "1,100 failed attempts × ₹3",
+          "inputs": [
+            {
+              "label": "Failed authorisation attempts",
+              "value": "1,100"
+            },
+            {
+              "label": "Charge per attempt",
+              "value": "₹3.00"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-03",
+          "sourceId": "P-03",
+          "title": "Failed-payment charge, per attempt",
+          "quote": "A fixed charge of ₹3 per failed authorisation attempt.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": false,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-05",
+        "kind": "chargeback_principal",
+        "label": "Chargebacks (principal)",
+        "amount": -540000,
+        "runningBalance": 113098000,
+        "count": 2,
+        "unitAmount": 270000,
+        "basis": {
+          "formula": "2 disputes × ₹2,700",
+          "inputs": [
+            {
+              "label": "Disputes raised",
+              "value": "2"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "api_field",
+          "label": "API · disputes",
+          "sourceId": "dispute.amount",
+          "title": "Chargeback principal, summed from the disputes collection",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": true,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-06",
+        "kind": "chargeback_fee",
+        "label": "Chargeback fees",
+        "amount": -100000,
+        "runningBalance": 112998000,
+        "count": 2,
+        "unitAmount": 50000,
+        "basis": {
+          "formula": "2 disputes × ₹500",
+          "inputs": [
+            {
+              "label": "Disputes raised",
+              "value": "2"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-04",
+          "sourceId": "P-04",
+          "title": "Chargeback handling fee, per dispute",
+          "quote": "A fixed fee of ₹500 for each dispute raised against a captured payment.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": false,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-07",
+        "kind": "instant_settlement_fee",
+        "label": "On-demand settlement fee",
+        "amount": -106200,
+        "runningBalance": 112891800,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "settlement.fees + settlement.tax, read from the rail's response",
+          "inputs": [
+            {
+              "label": "Amount settled on demand",
+              "value": "₹3,00,000.00"
+            },
+            {
+              "label": "settlement.fees",
+              "value": "₹900.00"
+            },
+            {
+              "label": "settlement.tax",
+              "value": "₹162.00"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "api_field",
+          "label": "API · fees + tax",
+          "sourceId": "settlement.fees, settlement.tax",
+          "title": "On-demand settlement fee, read from the rail's own response",
+          "quote": "Read verbatim from the settlement object's fees and tax fields. Assay does not hold a rate for this line: §4.1 — rupees come from what the rail returned, never from a rate table we typed in.",
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": false,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "L-08",
+        "kind": "net_credited",
+        "label": "Actually credited",
+        "amount": 0,
+        "runningBalance": 112891800,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "signed sum of every line above",
+          "inputs": [
+            {
+              "label": "Lines",
+              "value": "8"
+            }
+          ],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "derived",
+          "label": "derived",
+          "sourceId": "waterfall.sum",
+          "title": "Net credited — the signed sum of every line above, in deterministic code",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": true,
+        "amountReconciled": true,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      }
+    ],
+    "instrumentMix": [
+      {
+        "instrument": "upi_bank_account",
+        "displayLabel": "UPI — bank account",
+        "reportedAs": "UPI",
+        "grossCaptured": 72000000,
+        "paymentCount": 640,
+        "networkMdrBps": 0,
+        "feeCharged": 1440000,
+        "collapsedInReport": true,
+        "citation": {
+          "kind": "statute",
+          "label": "PSSA §10A",
+          "sourceId": "PSSA-10A",
+          "title": "Payment and Settlement Systems Act §10A — no charge on prescribed electronic modes",
+          "quote": "No bank or system provider shall impose any charge upon anyone, either directly or indirectly, for using the electronic modes of payment prescribed under section 269SU of the Income-tax Act, 1961.",
+          "url": "https://razorpay.com/terms/",
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "instrument": "upi_rupay_credit",
+        "displayLabel": "UPI — RuPay credit card",
+        "reportedAs": "UPI",
+        "grossCaptured": 12000000,
+        "paymentCount": 85,
+        "networkMdrBps": 200,
+        "feeCharged": 240000,
+        "collapsedInReport": true,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-instrument_subtype",
+          "title": "Three UPI rails with different statutory MDR, all reported as \"UPI\"",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "instrument": "upi_ppi",
+        "displayLabel": "UPI — wallet / PPI",
+        "reportedAs": "UPI",
+        "grossCaptured": 6000000,
+        "paymentCount": 55,
+        "networkMdrBps": 110,
+        "feeCharged": 120000,
+        "collapsedInReport": true,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-instrument_subtype",
+          "title": "Three UPI rails with different statutory MDR, all reported as \"UPI\"",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "instrument": "card_credit",
+        "displayLabel": "Cards",
+        "reportedAs": "Card",
+        "grossCaptured": 24000000,
+        "paymentCount": 145,
+        "networkMdrBps": 180,
+        "feeCharged": 480000,
+        "collapsedInReport": true,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-card_bin_tier",
+          "title": "Card BIN tier is not present in merchant-facing reports",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "instrument": "netbanking",
+        "displayLabel": "Netbanking",
+        "reportedAs": "Netbanking",
+        "grossCaptured": 6000000,
+        "paymentCount": 35,
+        "networkMdrBps": 0,
+        "feeCharged": 120000,
+        "collapsedInReport": false,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-per_line_fee_basis",
+          "title": "Per-line fee basis is not present in merchant-facing reports",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      }
+    ],
+    "reconciliation": {
+      "ok": true,
+      "computedNet": 112891800,
+      "statedNet": 112891800,
+      "delta": 0
+    },
+    "policyId": "pol_flat2pc01"
+  },
+  "ceiling": {
+    "settlementId": "stl_2608mera01",
+    "totalDelta": 7108200,
+    "amountReconciled": {
+      "amount": 7108200,
+      "share": 1
+    },
+    "amountUnreconciled": {
+      "amount": 0,
+      "share": 0
+    },
+    "basisVerifiable": {
+      "amount": 4708200,
+      "share": 0.6624
+    },
+    "basisUnverifiable": {
+      "amount": 2400000,
+      "share": 0.3376
+    },
+    "missingFields": [
+      {
+        "id": "instrument_subtype",
+        "name": "Instrument sub-type",
+        "whyItMatters": "Bank-account UPI carries 0% network MDR by statute, RuPay credit on UPI around 2%, and PPI on UPI 1.1% above ₹2,000. All three arrive in merchant reports labelled identically as \"UPI\", so no merchant can check which rail carried which rupee.",
+        "wouldResolve": 1800000,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-instrument_subtype",
+          "title": "Three UPI rails with different statutory MDR, all reported as \"UPI\"",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "id": "card_bin_tier",
+        "name": "Card BIN tier",
+        "whyItMatters": "Debit, credit, commercial and international BINs carry materially different interchange, and the tier is not surfaced on the merchant's report — so the card slice of the fee cannot be checked against any published rate.",
+        "wouldResolve": 480000,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-card_bin_tier",
+          "title": "Card BIN tier is not present in merchant-facing reports",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "id": "per_line_fee_basis",
+        "name": "Per-line fee basis",
+        "whyItMatters": "Each fee line states an amount but not the base it was computed on, so a merchant cannot distinguish an ad-valorem charge from a flat per-transaction one, or verify either.",
+        "wouldResolve": 120000,
+        "citation": {
+          "kind": "derived",
+          "label": "field missing",
+          "sourceId": "FIELD-per_line_fee_basis",
+          "title": "Per-line fee basis is not present in merchant-facing reports",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      }
+    ],
+    "headline": "Every rupee reconciles. ₹24,000 of it — 33.8% — you have no way to check.",
+    "method": "Two deterministic passes over the settlement's own lines. The first asserts each amount against the rail's figures. The second asks whether the rule behind that amount is derivable from the fields present in the merchant's own reports. No model runs in either pass; the model's only job was parsing the rate card into the policy a human then approved.",
+    "zeroMdrExposure": {
+      "grossOnZeroMdrRails": 72000000,
+      "feeLeviedOnZeroMdrRails": 1440000,
+      "annualisedFee": 17280000,
+      "note": "₹7,20,000 of this cycle moved on a rail that carries zero network MDR by statute — UPI from a bank account. Under a flat 2% plan that slice still attracted ₹14,400 of fee. This is legal, disclosed in the plan, and invisible on the report: nothing Meera is given tells her the slice exists. Counted here only for rails where zero MDR is mandated by statute (UPI from a bank account, RuPay debit) — netbanking is excluded, as it carries a flat per-transaction bank charge rather than an ad-valorem MDR.",
+      "citations": [
+        {
+          "kind": "statute",
+          "label": "PSSA §10A",
+          "sourceId": "PSSA-10A",
+          "title": "Payment and Settlement Systems Act §10A — no charge on prescribed electronic modes",
+          "quote": "No bank or system provider shall impose any charge upon anyone, either directly or indirectly, for using the electronic modes of payment prescribed under section 269SU of the Income-tax Act, 1961.",
+          "url": "https://razorpay.com/terms/",
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        {
+          "kind": "statute",
+          "label": "IT Act §269SU",
+          "sourceId": "IT-269SU",
+          "title": "Income-tax Act §269SU — prescribed electronic modes (UPI, RuPay debit)",
+          "quote": null,
+          "url": "https://razorpay.com/terms/",
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      ]
+    }
+  },
+  "policy": {
+    "id": "pol_flat2pc01",
+    "version": "2026-09-04.1",
+    "label": "Flat 2% merchant plan — constructed scenario",
+    "sourceDocuments": [
+      {
+        "title": "Razorpay Terms & Conditions",
+        "url": "https://razorpay.com/terms/"
+      },
+      {
+        "title": "Payment and Settlement Systems Act, §10A",
+        "url": null
+      },
+      {
+        "title": "Income-tax Act, §269SU",
+        "url": null
+      },
+      {
+        "title": "Merchant pricing plan (constructed for this scenario)",
+        "url": null
+      }
+    ],
+    "approvedBy": "javeria.taj",
+    "approvedAt": 1788495300000,
+    "lines": [
+      {
+        "id": "P-01",
+        "label": "Gateway fee — flat plan",
+        "appliesTo": "every captured payment, all instruments",
+        "rateBps": 200,
+        "fixedAmount": null,
+        "readFromApi": null,
+        "quote": "A flat 2.00% of the captured amount, applied uniformly to every payment instrument.",
+        "url": null,
+        "parsedBy": "model",
+        "approved": true,
+        "approvedBy": "javeria.taj",
+        "approvedAt": 1788495300000,
+        "provenance": "constructed"
+      },
+      {
+        "id": "P-02",
+        "label": "GST on fees",
+        "appliesTo": "all gateway fees",
+        "rateBps": 1800,
+        "fixedAmount": null,
+        "readFromApi": null,
+        "quote": "Goods and Services Tax at 18% is levied on the gateway fee, not on the transaction value.",
+        "url": null,
+        "parsedBy": "model",
+        "approved": true,
+        "approvedBy": "javeria.taj",
+        "approvedAt": 1788495300000,
+        "provenance": "documented"
+      },
+      {
+        "id": "P-03",
+        "label": "Failed-payment charge",
+        "appliesTo": "each failed authorisation attempt",
+        "rateBps": null,
+        "fixedAmount": 300,
+        "readFromApi": null,
+        "quote": "A fixed charge of ₹3 per failed authorisation attempt.",
+        "url": null,
+        "parsedBy": "model",
+        "approved": true,
+        "approvedBy": "javeria.taj",
+        "approvedAt": 1788495300000,
+        "provenance": "constructed"
+      },
+      {
+        "id": "P-04",
+        "label": "Chargeback handling fee",
+        "appliesTo": "each dispute raised",
+        "rateBps": null,
+        "fixedAmount": 50000,
+        "readFromApi": null,
+        "quote": "A fixed fee of ₹500 for each dispute raised against a captured payment.",
+        "url": null,
+        "parsedBy": "model",
+        "approved": true,
+        "approvedBy": "javeria.taj",
+        "approvedAt": 1788495300000,
+        "provenance": "constructed"
+      },
+      {
+        "id": "P-05",
+        "label": "On-demand settlement fee",
+        "appliesTo": "each on-demand settlement",
+        "rateBps": null,
+        "fixedAmount": null,
+        "readFromApi": "settlement.fees + settlement.tax",
+        "quote": "No rate is held for this line. The fee and its tax are read from the settlement object returned by the rail. §4.1: a rate we typed in is a rate that can go stale on camera.",
+        "url": null,
+        "parsedBy": "model",
+        "approved": true,
+        "approvedBy": "javeria.taj",
+        "approvedAt": 1788495300000,
+        "provenance": "documented"
+      },
+      {
+        "id": "P-06",
+        "label": "Zero network MDR — prescribed electronic modes",
+        "appliesTo": "UPI from a bank account, RuPay debit",
+        "rateBps": 0,
+        "fixedAmount": null,
+        "readFromApi": null,
+        "quote": "No bank or system provider shall impose any charge upon anyone, either directly or indirectly, for using the electronic modes of payment prescribed under section 269SU of the Income-tax Act, 1961.",
+        "url": "https://razorpay.com/terms/",
+        "parsedBy": "model",
+        "approved": true,
+        "approvedBy": "javeria.taj",
+        "approvedAt": 1788495300000,
+        "provenance": "documented"
+      }
+    ]
+  },
+  "window": {
+    "settlementId": "stl_2608mera01",
+    "settledAt": 1788413400000,
+    "deadlineAt": 1788672600000,
+    "serverNow": 1788607800000,
+    "msRemaining": 64800000,
+    "status": "closing",
+    "closingThresholdMs": 86400000,
+    "clause": {
+      "kind": "statute",
+      "label": "T&C Part B",
+      "sourceId": "TNC-PART-B-DISCREPANCY",
+      "title": "Discrepancy reporting window",
+      "quote": "In case of discrepancies, You shall report to Razorpay PA regarding such discrepancy within three (3) days upon the receipt of the fund settlements.",
+      "url": "https://razorpay.com/terms/",
+      "approvedAt": null,
+      "approvedBy": null
+    }
+  },
+  "report": {
+    "settlementId": "stl_2608mera01",
+    "generatedAt": 1788607800000,
+    "window": {
+      "settlementId": "stl_2608mera01",
+      "settledAt": 1788413400000,
+      "deadlineAt": 1788672600000,
+      "serverNow": 1788607800000,
+      "msRemaining": 64800000,
+      "status": "closing",
+      "closingThresholdMs": 86400000,
+      "clause": {
+        "kind": "statute",
+        "label": "T&C Part B",
+        "sourceId": "TNC-PART-B-DISCREPANCY",
+        "title": "Discrepancy reporting window",
+        "quote": "In case of discrepancies, You shall report to Razorpay PA regarding such discrepancy within three (3) days upon the receipt of the fund settlements.",
+        "url": "https://razorpay.com/terms/",
+        "approvedAt": null,
+        "approvedBy": null
+      }
+    },
+    "subject": "Settlement discrepancy — August 2026 cycle (stl_2608mera01)",
+    "body": "Reporting a discrepancy on the settlement received for the August 2026 cycle,\nwithin the three-day window set out in the terms.\n\nAmount credited: ₹11,28,918.00\nAmount expected on the stated plan (gross − 2% − refunds): ₹11,44,000.00\nDifference: ₹15,082.00\n\nThe following lines account for the difference. Each is reconciled against\nthe figures returned for this settlement:\n\n  GST at 18% on the gateway fee            ₹4,320.00\n  Failed-payment charges, 1,100 × ₹3       ₹3,300.00\n  Chargebacks, 2 × ₹2,700 principal        ₹5,400.00\n  Chargeback fees, 2 × ₹500                ₹1,000.00\n  On-demand settlement fee                 ₹1,062.00\n\nThree of these five lines are not itemised anywhere in the reports available\nto me, which is why the difference was not identified at the time of credit.\n\nSeparately, and not disputed here: ₹24,000.00 of gateway fee was charged\nacross five rails carrying different statutory network MDR, three of which\nare reported identically as \"UPI\". I am unable to verify the composition of\nthat fee from any field made available to me, and would ask that the\ninstrument sub-type and per-line fee basis be included in future reports.\n\nRequesting confirmation of the five lines above within the reporting window.",
+    "claims": [
+      {
+        "lineId": "L-03",
+        "statement": "GST at 18% on the gateway fee",
+        "amount": 432000,
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-02",
+          "sourceId": "P-02",
+          "title": "GST at 18% on payment-gateway fees",
+          "quote": "Goods and Services Tax at 18% is levied on the gateway fee, not on the transaction value.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        }
+      },
+      {
+        "lineId": "L-04",
+        "statement": "Failed-payment charges, 1,100 × ₹3",
+        "amount": 330000,
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-03",
+          "sourceId": "P-03",
+          "title": "Failed-payment charge, per attempt",
+          "quote": "A fixed charge of ₹3 per failed authorisation attempt.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        }
+      },
+      {
+        "lineId": "L-05",
+        "statement": "Chargebacks, 2 × ₹2,700 principal",
+        "amount": 540000,
+        "citation": {
+          "kind": "api_field",
+          "label": "API · disputes",
+          "sourceId": "dispute.amount",
+          "title": "Chargeback principal, summed from the disputes collection",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      },
+      {
+        "lineId": "L-06",
+        "statement": "Chargeback fees, 2 × ₹500",
+        "amount": 100000,
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-04",
+          "sourceId": "P-04",
+          "title": "Chargeback handling fee, per dispute",
+          "quote": "A fixed fee of ₹500 for each dispute raised against a captured payment.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        }
+      },
+      {
+        "lineId": "L-07",
+        "statement": "On-demand settlement fee",
+        "amount": 106200,
+        "citation": {
+          "kind": "api_field",
+          "label": "API · fees + tax",
+          "sourceId": "settlement.fees, settlement.tax",
+          "title": "On-demand settlement fee, read from the rail's own response",
+          "quote": "Read verbatim from the settlement object's fees and tax fields. Assay does not hold a rate for this line: §4.1 — rupees come from what the rail returned, never from a rate table we typed in.",
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        }
+      }
+    ],
+    "disputedTotal": 1508200
+  },
+  "forecast": {
+    "cycleId": "cyc_202609",
+    "asOf": 1788607800000,
+    "expectedSettlementAt": 1791005400000,
+    "capturedSoFar": 41000000,
+    "projectedNet": 39018400,
+    "projectedLines": [
+      {
+        "id": "F-00",
+        "kind": "gross_captured",
+        "label": "Captured so far",
+        "amount": 41000000,
+        "runningBalance": 41000000,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "sum(payment.amount), cycle to date",
+          "inputs": [],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "api_field",
+          "label": "API · payments",
+          "sourceId": "payment.amount",
+          "title": "Gross captured, summed over captured payments in the cycle",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": false,
+        "amountReconciled": false,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "F-01",
+        "kind": "gateway_fee",
+        "label": "Gateway fee at 2%",
+        "amount": -820000,
+        "runningBalance": 40180000,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "2.00% × captured to date",
+          "inputs": [],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-01",
+          "sourceId": "P-01",
+          "title": "Gateway fee — flat plan, all instruments",
+          "quote": "A flat 2.00% of the captured amount, applied uniformly to every payment instrument.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": false,
+        "amountReconciled": false,
+        "basisVerifiable": false,
+        "unverifiableReason": "Composition unverifiable, as in the settled cycle."
+      },
+      {
+        "id": "F-02",
+        "kind": "refund_principal",
+        "label": "Refunds issued",
+        "amount": -900000,
+        "runningBalance": 39280000,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "sum(refund.amount), cycle to date",
+          "inputs": [],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "api_field",
+          "label": "API · refunds",
+          "sourceId": "refund.amount",
+          "title": "Refund principal, summed from the refunds collection",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": false,
+        "amountReconciled": false,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "F-03",
+        "kind": "tax_on_fees",
+        "label": "GST at 18% on the fee",
+        "amount": -147600,
+        "runningBalance": 39132400,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "18% × gateway fee",
+          "inputs": [],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-02",
+          "sourceId": "P-02",
+          "title": "GST at 18% on payment-gateway fees",
+          "quote": "Goods and Services Tax at 18% is levied on the gateway fee, not on the transaction value.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": false,
+        "amountReconciled": false,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "F-04",
+        "kind": "failed_payment_fee",
+        "label": "Failed-payment charges",
+        "amount": -114000,
+        "runningBalance": 39018400,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "380 failed attempts × ₹3",
+          "inputs": [],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "policy_line",
+          "label": "policy P-03",
+          "sourceId": "P-03",
+          "title": "Failed-payment charge, per attempt",
+          "quote": "A fixed charge of ₹3 per failed authorisation attempt.",
+          "url": null,
+          "approvedAt": 1788495300000,
+          "approvedBy": "javeria.taj"
+        },
+        "onMerchantReport": false,
+        "amountReconciled": false,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      },
+      {
+        "id": "F-05",
+        "kind": "net_credited",
+        "label": "Projected credit",
+        "amount": 0,
+        "runningBalance": 39018400,
+        "count": null,
+        "unitAmount": null,
+        "basis": {
+          "formula": "signed sum of every line above",
+          "inputs": [],
+          "computedBy": "deterministic"
+        },
+        "citation": {
+          "kind": "derived",
+          "label": "derived",
+          "sourceId": "waterfall.sum",
+          "title": "Net credited — the signed sum of every line above, in deterministic code",
+          "quote": null,
+          "url": null,
+          "approvedAt": null,
+          "approvedBy": null
+        },
+        "onMerchantReport": false,
+        "amountReconciled": false,
+        "basisVerifiable": true,
+        "unverifiableReason": null
+      }
+    ],
+    "backtest": {
+      "method": "policy_engine_replay",
+      "cycles": 0,
+      "medianAbsError": 0,
+      "maxAbsError": 0,
+      "note": "Not yet backtested. The synthetic generator (J-B4) has not been run against this policy. The UI must render this as 'accuracy not yet measured' — never as zero error."
+    }
+  }
+}

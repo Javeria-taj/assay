@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+
+      # §3.4 reproduces to the rupee, or nothing else matters.
+      - name: reconciliation tests
+        run: pnpm test
+
+      - name: typecheck
+        run: pnpm typecheck
+
+      # The generated fixture cannot drift from the typed source.
+      - name: fixtures are in sync
+        run: pnpm fixtures:check
+
+      # Every endpoint answers and validates against the shared contract.
+      - name: contract conformance (mock)
+        run: pnpm verify:mock
