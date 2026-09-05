@@ -83,19 +83,46 @@ gap"* — never *"someone is hiding fees."*
 
 **The model reads and writes English. Deterministic code touches the money.**
 
-The model parses a rate card or T&C into a machine-checkable fee policy and
-normalises heterogeneous report schemas. A human approves that policy before it
-is ever used to compute a rupee — `Policy.lines[].approved` is a hard
-precondition, and the API returns `policy_not_approved` rather than a number.
+The fee policy is model-parsed and human-approved **before** it computes a
+rupee. Every line of it — `P-01` through `P-06` — carries `parsedBy: "model"`,
+`approved: true`, a named approver, a timestamp, and the verbatim quote it was
+parsed from. `GET /v1/policy` serves the whole thing, unapproved lines included,
+so a fee line in the waterfall can be followed to its rule and the rule to its
+own source.
+
+Approval is a precondition, not a label. `applyPolicy` sweeps every line before
+any arithmetic begins and throws on the first one without a human's name on it;
+the route layer maps that to a 409 `policy_not_approved` and serves no payload
+at all. The sweep is up front on purpose — checking lazily would let `P-01`
+through `P-05` compute real money before the refusal arrived. That sweep is the
+guard on the path that actually serves: `calculate` takes the contract's
+`Policy`, and every rupee it computes has passed the check.
+
+A second, stronger gate exists and is **not** on that path, which is worth
+saying rather than glossing. `ApprovedFeePolicy` in
+`apps/api/src/domain/policy.ts` has no constructor but narrowing through
+`isApproved`, so a function demanding one cannot be handed a policy nobody
+signed — a refusal the compiler makes rather than the runtime. The engine was
+settled in favour of the contract's own types, so nothing on the request path
+demands it today. The type-level proof is real and it typechecks; it is
+currently the road not taken.
 
 Every rupee of arithmetic and every pass/fail in this repo is deterministic
-code, covered by tests that reproduce the table above to the rupee.
+code, covered by tests that reproduce the table above to the paisa.
 
 And one rule underneath that one: **rupees come from what the rail returned, not
 from a rate we typed in.** The on-demand settlement fee above has no rate
 anywhere in this repo. Policy line `P-05` holds
-`readFromApi: "settlement.fees + settlement.tax"` and `rateBps: null`. A stale
-rate on camera costs exactly as much credibility as a wrong API call.
+`readFromApi: "settlement.fees + settlement.tax"` and `rateBps: null`; the
+domain's `read_from_api` variant has no rate field to put one into; and
+`onDemandFee` stops rather than computes if that line ever grows a rate or names
+a different pair of fields. A stale rate on camera costs exactly as much
+credibility as a wrong API call.
+
+**Where the model is not: it parses nothing at request time.** There is no live
+parse endpoint and no Anthropic SDK in the dependency tree. What computes is the
+committed, human-approved policy — the documented fallback, chosen rather than
+arrived at.
 
 ---
 
@@ -116,7 +143,8 @@ window.**
 
 ## Documented vs constructed
 
-Both statements ship, and the UI says so on screen.
+Both statements ship, and every policy line carries its own `provenance`, so the
+distinction travels in the payload rather than in a footnote.
 
 **Documented** — traceable to a published source: the three-day discrepancy
 clause; zero network MDR on UPI-from-bank-account and RuPay debit (PSSA §10A,
@@ -138,35 +166,106 @@ provider's real statement.
 
 ```bash
 pnpm install
-pnpm mock        # the API, zero dependencies      → http://localhost:4317
-pnpm test        # reproduces the table above, to the rupee
-pnpm verify:mock # every endpoint against the shared contract
+pnpm test        # 15 contract + 97 engine — reproduces the table above, to the paisa
+pnpm dev         # the API on :4318 and the web app on :3000, together
+```
+
+Nothing needs configuring. The API defaults to the synthetic source, and
+`ASSAY_SOURCE=live` without keys is a startup failure rather than a quiet
+fallback — a demo that serves constructed data under a live banner is the one
+failure this project cannot afford.
+
+```bash
+pnpm mock                                # the committed fixture, zero deps → :4317
+pnpm verify:mock                         # nine endpoints + four invariants, vs the mock
+BASE=http://localhost:4318 pnpm verify   # the same fourteen checks, vs the running API
 ```
 
 ```bash
-curl -s localhost:4317/v1/settlements/stl_2608mera01/explanation
+curl -s localhost:4318/v1/settlements/stl_2608mera01/explanation
 ```
 
 ## Layout
 
 ```
-packages/contract/     the Zod contract both sides import, the typed client,
-                       and the Meera fixture — one source of truth
+packages/contract/     the Zod contract both sides import, the typed client, and
+                       the Meera fixture — frozen at v0.1.0, one source of truth
+apps/api/src/domain/   the seam: RawCycle, the instrument table, the policy types,
+                       attribution, and the constructed Meera cycle
+apps/api/src/engine/   the arithmetic: calculate, ceiling, forecast, report, window.
+                       Pure — no clock, no env, no randomness, no I/O
+apps/api/src/sources/  where a cycle comes from: the seeded synthetic generator,
+                       and the read-only live rail adapter
+apps/api/src/routes/   the nine contract endpoints, and nothing else
+apps/web/              Next.js app — an API-reachability page so far
 tools/mock-server.mjs  zero-dependency mock API, runs on a clean clone
+tools/invariants/      the invariant checks, run over the wire against any deploy
 tools/verify-contract  conformance checker; points at the mock or the real API
-apps/web/              the UI          (Javeria)
-apps/api/              the real API    (Rafi)
 ```
 
 - **`API_CONTRACT.md`** — conventions, endpoints, and the ten invariants the API
   must hold.
+- **`docs/BUILD_LOG.md`** — what broke, what surprised us, and what we did.
 - **`FRONTEND.md`** — how to build the whole UI against the mock.
+
+## What a reviewer should look at first
+
+Four files carry the argument. Everything else is plumbing around them.
+
+| File | Why |
+|---|---|
+| `apps/api/src/engine/ceiling.ts` | The finding in executable form. The two axes are computed independently and never collapsed, `missingFields` is a **partition** of the instrument mix rather than three hardcoded numbers that happen to add up, and no rupee figure appears anywhere in the file. |
+| `apps/api/src/engine/policy-apply.ts` | The aggregation decision every figure in the waterfall rests on — per-slice for the fee, cycle-aggregate for the GST, integer multiplication for per-event charges — with the reasoning for each. Also the approval sweep and the `P-05` guard that refuses a rate. |
+| `apps/api/src/engine/calculate.ts` | `basisVerifiable` is **derived** from the gaps the source declared, in one place, never assigned. If a rail starts answering, the ceiling moves on its own and nobody edits a percentage. |
+| `apps/api/src/domain/attribution.ts` | Two small functions, and the two wrong answers they exist to prevent: keying attribution on the citation instead of `reportedAs` silently drops ₹14,400, and filtering zero-MDR rails numerically returns ₹15,600 against a fixture that says ₹14,400. |
 
 ## Status
 
-Contract, fixture, mock server and conformance checker are done and green.
-The calculator, the synthetic generator, the ceiling analysis, the policy parser
-and the real API are in progress.
+Every counter below was run, not estimated.
+
+| | |
+|---|---|
+| `pnpm typecheck` | clean |
+| `pnpm test` | 15 contract + 97 engine |
+| `pnpm test:golden` | 6/6 |
+| `pnpm verify:mock` | 14/14 |
+| `BASE=… pnpm verify` | **14/14 against the real API** — nine endpoints, plus four invariant checks made over the wire |
+
+Inside those: the calculator's own gate reads **TIER-1 34/34**, the ceiling's
+reads **CEILING 32/32**, and the cross-cycle check runs against five generated
+settlements rather than the one the fixture ships, so a passing invariant is a
+property of the engine and not of one payload.
+
+`calculate(MEERA_CYCLE, COMMITTED_POLICY)` deep-equals the frozen explanation
+fixture, `analyseCeiling` of that result deep-equals the frozen ceiling, and the
+served `/explanation`, `/ceiling` and `/policy` deep-equal the same fixtures over
+HTTP. The contract, the fixture, the mock and the conformance checker are done;
+so are the calculator, the ceiling analyser, the seeded synthetic generator, the
+dispute window, the discrepancy report, the forecast, and all nine endpoints of
+the real API — GET-only, and refusing to boot if the contract names an endpoint
+it does not mount.
+
+**What is not done:**
+
+- **Nothing is deployed.** `render.yaml` is committed and both services build,
+  but the Blueprint was never created. There is no URL and nothing is live.
+  Everything above runs locally.
+- **The live policy parser was not built.** No parse endpoint, no Anthropic SDK
+  in the dependency tree. The committed human-approved policy is what computes.
+- **The Razorpay spike made zero real API calls** — there were never any test
+  keys. The endpoint paths and field lists in `docs/razorpay-shapes.json` were
+  confirmed against the published documentation and are marked
+  `observed: false`. The live driver compiles and reaches the API; it has never
+  seen a real settlement. Every rupee figure in this README came from
+  constructed data, served through the synthetic source.
+- **The web app is a health check.** `apps/web` proves the browser can reach the
+  API cross-origin and that the response satisfies the shared contract. The
+  screens in `FRONTEND.md` are not built.
+
+Clone it and you get a green suite, a real API on `localhost:4318` serving the
+whole worked example over HTTP, a mock that runs before `pnpm install` has
+finished, and a checker that tells you in about a second whether either of them
+is lying.
 
 ## Licence
 
