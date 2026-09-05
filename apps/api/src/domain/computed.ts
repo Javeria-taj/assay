@@ -1,6 +1,6 @@
 import type { Instrument } from "./instrument.js";
 import type { Paise } from "./policy.js";
-import type { MerchantRef } from "./raw-cycle.js";
+import type { RawMerchant } from "./raw-cycle.js";
 
 /**
  * The engine's output, before any contract mapping.
@@ -174,7 +174,7 @@ export type ComputedSettlement = {
   readonly periodStart: number;
   readonly periodEnd: number;
   readonly settledAt: number;
-  readonly merchant: MerchantRef;
+  readonly merchant: RawMerchant;
 
   readonly grossCaptured: Paise;
   readonly netCredited: Paise;

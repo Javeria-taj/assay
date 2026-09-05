@@ -1,12 +1,11 @@
 import Razorpay from "razorpay";
 import type { Instrument } from "../domain/instrument.js";
 import type {
-  CapturedPayment,
   CycleRef,
-  Dispute,
-  OnDemandSettlement,
   RawCycle,
-  Refund,
+  RawDispute,
+  RawPayment,
+  RawRefund,
   SourceGap,
 } from "../domain/raw-cycle.js";
 import { SourceConfigError, type SettlementSource } from "./source.js";
@@ -101,7 +100,7 @@ const UNKNOWN_MERCHANT = {
   name: "This account",
   segment: "unknown",
   planLabel: "unknown",
-  headlineBps: 0,
+  planHeadlineBps: 0,
   constructed: false,
 } as const;
 
@@ -144,7 +143,7 @@ export class LiveSettlementSource implements SettlementSource {
       return {
         id: s.id,
         cycleId: cycleIdFor(settledAt),
-        label: new Date(settledAt).toLocaleDateString("en-IN", {
+        cycleLabel: new Date(settledAt).toLocaleDateString("en-IN", {
           month: "long",
           year: "numeric",
           timeZone: "Asia/Kolkata",
@@ -154,7 +153,7 @@ export class LiveSettlementSource implements SettlementSource {
         periodStart: settledAt,
         periodEnd: settledAt,
         settledAt,
-        statedNet: int(s.amount),
+        statedNetPaise: int(s.amount),
       };
     });
   }
@@ -177,9 +176,9 @@ export class LiveSettlementSource implements SettlementSource {
     const rows = allRows.filter((r) => r.settlement_id === id);
 
     const gaps: SourceGap[] = [];
-    const payments: CapturedPayment[] = [];
-    const refunds: Refund[] = [];
-    const disputes: Dispute[] = [];
+    const payments: RawPayment[] = [];
+    const refunds: RawRefund[] = [];
+    const disputes: RawDispute[] = [];
     let unresolvedUpi = 0;
     let unresolvedOther = 0;
 
@@ -193,23 +192,21 @@ export class LiveSettlementSource implements SettlementSource {
           }
           payments.push({
             id: row.entity_id,
-            amount: int(row.amount),
+            amountPaise: int(row.amount),
             capturedAt: ms(row.created_at),
             /* Assay will not invent a sub-type it was not given. Where the
              * report cannot say, the payment is carried at the family level
              * and the gap below says so. */
             instrument: instrument ?? "upi_bank_account",
             reportedAs: reportedAs(row),
-            feeCharged: typeof row.fee === "number" ? row.fee : null,
-            taxOnFee: typeof row.tax === "number" ? row.tax : null,
           });
           break;
         }
         case "refund": {
           refunds.push({
             id: row.entity_id,
-            amount: Math.abs(int(row.amount)),
-            paymentId: row.payment_id ?? null,
+            amountPaise: Math.abs(int(row.amount)),
+            paymentId: row.payment_id ?? "",
             refundedAt: ms(row.created_at),
           });
           break;
@@ -217,9 +214,8 @@ export class LiveSettlementSource implements SettlementSource {
         case "dispute": {
           disputes.push({
             id: row.entity_id,
-            amountDeducted: Math.abs(int(row.debit)),
-            paymentId: row.payment_id ?? null,
-            stage: "chargeback",
+            principalPaise: Math.abs(int(row.debit)),
+            paymentId: row.payment_id ?? "",
             raisedAt: ms(row.created_at),
           });
           break;
@@ -271,24 +267,33 @@ export class LiveSettlementSource implements SettlementSource {
       affectedCount: 1,
     });
 
-    const onDemandSettlements = await this.#onDemand();
-
+    const onDemand = await this.#onDemand();
     const times = rows.map((r) => ms(r.created_at)).filter((t) => t > 0);
 
     return {
       id: settlement.id,
       cycleId: cycleIdFor(settledAt),
-      merchant: { ...UNKNOWN_MERCHANT },
-      label: when.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" }),
+      cycleLabel: when.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" }),
       periodStart: times.length ? Math.min(...times) : settledAt,
       periodEnd: times.length ? Math.max(...times) : settledAt,
       settledAt,
-      statedNet: int(settlement.amount),
+      statedNetPaise: int(settlement.amount),
+      status: "settled",
+      merchant: { ...UNKNOWN_MERCHANT },
       payments,
       refunds,
       disputes,
-      failedAttemptCount: 0,
-      onDemandSettlements,
+      /* Never derivable from a settlement: a failed attempt does not settle. */
+      failedAttempts: [],
+      settlement: {
+        settlementId: settlement.id,
+        settledAt,
+        onDemand: onDemand !== null,
+        onDemandBasePaise: onDemand?.amountRequested ?? 0,
+        feesPaise: onDemand?.fees ?? 0,
+        taxPaise: onDemand?.tax ?? 0,
+        status: "settled",
+      },
       gaps,
     };
   }
@@ -297,19 +302,17 @@ export class LiveSettlementSource implements SettlementSource {
    * §4.1 in practice: `fees` and `tax` are read off the rail's own response.
    * There is no rate for this anywhere in Assay, and there must not be.
    */
-  async #onDemand(): Promise<OnDemandSettlement[]> {
+  async #onDemand(): Promise<{ amountRequested: number; fees: number; tax: number } | null> {
     const res = await this.#client.settlements
       .fetchAllOndemandSettlement({ count: 100 })
       .catch(() => null);
-    const items = res?.items ?? [];
+    const first = res?.items?.[0];
+    if (!first) return null;
 
-    return items.map((s) => ({
-      id: s.id,
-      amountRequested: int(s.amount_requested),
-      amountSettled: int(s.amount_settled),
-      fees: int(s.fees),
-      tax: int(s.tax),
-      requestedAt: ms(s.created_at),
-    }));
+    return {
+      amountRequested: int(first.amount_requested),
+      fees: int(first.fees),
+      tax: int(first.tax),
+    };
   }
 }
