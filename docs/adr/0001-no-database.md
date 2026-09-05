@@ -69,9 +69,12 @@ stopped being one.
 stamps `approvedBy` and `approvedAt` into a `Map` that dies with the process.
 See ADR-0003.
 
-**This is not deployed.** `render.yaml` is committed and both services build,
-but the Blueprint was never created and there is no URL. The two-instance
-consequence above is prospective, not observed.
+**The two-instance consequence is real but unobserved.** Both services are now
+live on Render, each on a single instance, so nothing has yet had the chance to
+disagree with itself. Scale the API past one instance and two callers can be
+served from two different in-process memos. Deployment also made the cold path
+visible: the first request after an idle period regenerates six cycles from the
+seed and takes about ten seconds, which is the price of persisting nothing.
 
 Against that: **there is no state to be wrong.** No migration, no stale row, no
 cache that disagrees with the thing it caches, no fixture drift between what was

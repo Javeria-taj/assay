@@ -37,10 +37,15 @@ jobs:
 
       # The web app postdates this workflow. Without these two steps the whole
       # console and landing page could break with CI still green.
-      - name: web typecheck
-        run: pnpm --filter @assay/web exec tsc --noEmit
-
+      #
+      # Build BEFORE typecheck, and the order is load-bearing: `LayoutProps`
+      # and `PageProps` are global types Next generates into .next/types during
+      # a build. A fresh checkout has no .next, so a standalone tsc run cannot
+      # see them and fails on files that are perfectly correct.
       - name: web build
         run: pnpm --filter @assay/web build
         env:
           NEXT_PUBLIC_ASSAY_API: http://localhost:4318
+
+      - name: web typecheck
+        run: pnpm --filter @assay/web exec tsc --noEmit

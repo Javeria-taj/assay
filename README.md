@@ -4,6 +4,8 @@
 
 A payment gateway credits ₹11,28,918 when a merchant expected ₹11,44,000. She knows the difference is fees, refunds, chargebacks and tax — but she has no way to verify that the ₹24,000 gateway fee is correct, because the three UPI rails carrying different statutory network MDR arrive on her report under one word: `UPI`. Assay takes one settlement cycle and one approved fee policy, puts the entire gross-to-net waterfall on a single screen, and cites every line to the rule or the API field that produced it. Every rupee reconciles. A third of it cannot be independently checked. Those are two different statements, and only the first one is being answered today.
 
+**Live:** [console](https://assay-web.onrender.com/s/stl_2608mera01) · [landing](https://assay-web.onrender.com/) · [API health](https://assay-api-yrs6.onrender.com/v1/health)
+
 > **constructed scenario · every rule real, every volume chosen**
 >
 > The merchant, her volumes, her instrument mix and her plan are constructed to show scale at a believable Indian SMB. The arithmetic is correct and every rule underneath it is real. Assay is gateway-agnostic, runs on synthetic data, and is never pointed at a named provider's real statement.
@@ -505,7 +507,7 @@ ASSAY_MOCK_EMPTY=1         pnpm mock   # empty settlement list
 
 ## Deployment
 
-### Render (configured but not yet deployed)
+### Render (live)
 
 `render.yaml` defines a Blueprint with two web services in the Singapore region:
 
@@ -516,7 +518,22 @@ ASSAY_MOCK_EMPTY=1         pnpm mock   # empty settlement list
 
 Environment variables are wired between services: `ALLOWED_ORIGIN` on the API reads from the web service's host, and `NEXT_PUBLIC_ASSAY_API` on the web reads from the API service's host. `OPS_TOKEN` is auto-generated.
 
-> **Status:** The Blueprint is committed but has not been created on Render. There is no live URL.
+**Live:**
+
+| | |
+|---|---|
+| Console | <https://assay-web.onrender.com/s/stl_2608mera01> |
+| Landing | <https://assay-web.onrender.com/> |
+| API | <https://assay-api-yrs6.onrender.com/v1/health> |
+
+`BASE=https://assay-api-yrs6.onrender.com pnpm verify` reports **14/14** against
+the deployed API — nine contract endpoints plus five invariant checks made over
+the wire, so the deployment is checked rather than assumed.
+
+The first request to `/v1/settlements` after an idle period takes around ten
+seconds: six cycles are generated from the seed on demand, and nothing is
+persisted between restarts by design. Every request after that is served from
+the in-process memo in about a tenth of a second.
 
 ---
 
@@ -602,7 +619,7 @@ The following accessibility patterns are implemented in the codebase:
 ## Limitations
 
 - **Constructed scenario only.** Meera's volumes, instrument mix and plan are chosen. Every rule is real; the data is not. The UI says so prominently.
-- **No live deployment.** `render.yaml` is committed but the Blueprint has not been created. There is no URL.
+- **Cold start on the first request.** Nothing is persisted, so the first call after an idle period regenerates the cycles from the seed and takes about ten seconds. Subsequent requests are memoised in process and return in ~100 ms.
 - **No authentication.** `TOKEN` is threaded through the verifier and the contract has an `unauthorized` error code, but no route reads the header today.
 - **No persistence.** Everything is computed per request and memoised in process. Settlements cannot be saved, annotated, or revisited.
 - **No real Razorpay data.** The Razorpay spike made zero API calls — there are no test keys. `docs/razorpay-shapes.json` is marked `observed: false` throughout.

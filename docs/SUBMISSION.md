@@ -195,10 +195,13 @@ reaches the API and has never seen a real settlement. `pnpm spike:razorpay` fill
 the file in the moment keys exist, and the first real response supersedes every
 documented field in it.
 
-**Deployment.** `render.yaml` is committed and both services build. The Blueprint
-was never created, so there is no URL and nothing is live. Nothing authenticates
-either — `TOKEN` is threaded through the verifier because the contract's error
-enum has an `unauthorized` code, but no route reads the header today.
+**Deployment.** Both services are live on Render, wired to each other by the
+Blueprint rather than by hand: <https://assay-web.onrender.com>, with the API at
+<https://assay-api-yrs6.onrender.com>. `BASE=<api> pnpm verify` reports 14/14
+against the deployed API, so the deployment is checked rather than assumed.
+Nothing authenticates, though — `TOKEN` is threaded through the verifier because
+the contract's error enum has an `unauthorized` code, but no route reads the
+header today.
 
 **Persisting a cycle.** Everything is computed per request and memoised in
 process. A merchant cannot come back to last month's explanation, annotate a
