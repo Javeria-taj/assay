@@ -13,7 +13,7 @@
     "mock": "node tools/mock-server.mjs",
     "verify": "tsx tools/verify-contract.ts",
     "verify:mock": "node tools/with-mock.mjs tsx tools/verify-contract.ts",
-    "test": "pnpm --filter @assay/contract test",
+    "test": "pnpm --filter @assay/contract test && tsx --test apps/api/test/*.test.ts",
     "test:golden": "tsx --test apps/api/src/engine/golden.test.ts",
     "typecheck": "tsc --pretty false",
     "build": "pnpm --filter @assay/web build",

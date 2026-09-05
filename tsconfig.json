@@ -1,10 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
@@ -14,5 +19,10 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["packages/**/*.ts", "tools/**/*.ts", "apps/api/src/**/*.ts"]
+  "include": [
+    "packages/**/*.ts",
+    "tools/**/*.ts",
+    "apps/api/src/**/*.ts",
+    "apps/api/test/**/*.ts"
+  ]
 }

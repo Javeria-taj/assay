@@ -14,22 +14,20 @@ import {
   UNEXPLAINED_GAP,
   formatPaise,
 } from "@assay/contract";
-import { computeSettlement } from "./ports.js";
+import { calculate } from "./calculate.js";
 import { COMMITTED_POLICY } from "../domain/committed-policy.js";
 import { MEERA_CYCLE, MEERA_SLICES } from "../domain/meera.js";
 
 /**
- * The wave-0 gate: the seam is sound, and the engine is honest about not
- * existing yet.
+ * The gate: the seam is sound, and the engine reproduces the worked example.
  *
- * The first group passes today. It proves that `MEERA_CYCLE` — the cycle all
- * three wave-1 streams build against — actually reproduces the canonical
- * figures, so a green calculator later means something. A golden test standing
- * on an unsound fixture proves nothing at all.
+ * The first group proves that `MEERA_CYCLE` — the cycle all three wave-1
+ * streams build against — actually reproduces the canonical figures. It runs
+ * first for a reason: a golden test standing on an unsound fixture proves
+ * nothing at all, so the fixture is checked before it is allowed to judge the
+ * engine.
  *
- * The last one fails until the calculator stream lands, and that is correct.
- * It is committed failing, wired to `pnpm test:golden`, and kept out of
- * `pnpm test` so CI stays green while wave 1 is in flight.
+ * The last one is the rupee gate itself.
  *
  * Every canonical figure is imported from the contract's fixtures rather than
  * retyped. If a number here disagrees with the fixture, the fixture wins.
@@ -111,23 +109,28 @@ test("a policy may not compute a rupee until a human has approved every line", (
   assert.equal(p05.readFromApi, "settlement.fees + settlement.tax");
 });
 
-/* --------------------------------- the gate, failing until wave 1 lands */
+/* -------------------------------------------------- the gate, now live */
 
-test("the calculator reproduces the waterfall", () => {
-  const s = computeSettlement(MEERA_CYCLE, COMMITTED_POLICY as never);
+test("the calculator reproduces the waterfall, to the paisa", () => {
+  /* Targets `calculate`, not `engine/ports.ts`. The ports stub predates the
+   * wave-1 briefs and is superseded by them: it returns the internal
+   * `ComputedSettlement` vocabulary, while the engine returns a contract
+   * `Explanation`. See docs/workstreams/PATHS.md §3. */
+  const e = calculate(MEERA_CYCLE, COMMITTED_POLICY);
 
-  assert.equal(s.grossCaptured, GROSS_CAPTURED);
-  assert.equal(s.netCredited, NET_CREDITED);
-  assert.equal(s.merchantExpected, MERCHANT_EXPECTED);
-  assert.equal(s.unexplainedGap, UNEXPLAINED_GAP);
-  assert.equal(s.reconciliation.delta, 0);
+  assert.equal(e.grossCaptured, GROSS_CAPTURED);
+  assert.equal(e.netCredited, NET_CREDITED);
+  assert.equal(e.merchantExpected, MERCHANT_EXPECTED);
+  assert.equal(e.unexplainedGap, UNEXPLAINED_GAP);
+  assert.equal(e.reconciliation.delta, 0);
+  assert.equal(e.reconciliation.ok, true);
 
-  const sum = s.lines.filter((l) => l.kind !== "net_credited").reduce((a, l) => a + l.amount, 0);
-  assert.equal(sum, NET_CREDITED);
+  const sum = e.lines.filter((l) => l.kind !== "net_credited").reduce((a, l) => a + l.amount, 0);
+  assert.equal(sum, NET_CREDITED, formatPaise(sum) + " != " + formatPaise(NET_CREDITED));
 
-  for (const line of s.lines) {
+  for (const line of e.lines) {
     assert.ok(line.citation.sourceId.length > 0, "line " + line.id + " cites nothing");
-    assert.equal(line.basisVerifiable, line.derivedFromGaps.length === 0, "line " + line.id);
-    if (!line.basisVerifiable) assert.ok(line.unverifiableReason, "line " + line.id);
+    if (!line.basisVerifiable) assert.ok(line.unverifiableReason, "line " + line.id + " cannot say why");
+    else assert.equal(line.unverifiableReason, null, "line " + line.id);
   }
 });
