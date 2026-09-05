@@ -16,8 +16,13 @@ services:
         value: synthetic
       - key: ASSAY_SEED
         value: "4217"
+      # Wired from the web service so there is nothing to fill in by hand.
+      # Render supplies the bare host; the API prefixes the scheme.
       - key: ALLOWED_ORIGIN
-        sync: false
+        fromService:
+          type: web
+          name: assay-web
+          property: host
       - key: OPS_TOKEN
         generateValue: true
       - key: RAZORPAY_KEY_ID
@@ -40,5 +45,11 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      # Wired from the API service. NEXT_PUBLIC_* is inlined at BUILD time, so
+      # this must resolve before the web build runs - which is why it is a
+      # service reference rather than a value someone remembers to paste.
       - key: NEXT_PUBLIC_ASSAY_API
-        sync: false
+        fromService:
+          type: web
+          name: assay-api
+          property: host

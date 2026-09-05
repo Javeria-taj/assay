@@ -19,7 +19,19 @@ import type {
  * Switching to a different API is one env var and no code change.
  */
 
-export const BASE_URL = process.env.NEXT_PUBLIC_ASSAY_API ?? "http://localhost:4317";
+/**
+ * Render's `fromService` supplies a bare host — `assay-api.onrender.com` — so
+ * the scheme is added here rather than typed into a dashboard field somebody
+ * has to remember. A value that already carries a scheme is left alone, which
+ * keeps `http://localhost:4317` working in development.
+ */
+function normaliseBase(raw: string | undefined): string {
+  const v = (raw ?? "").trim().replace(/\/+$/, "");
+  if (!v) return "http://localhost:4317";
+  return /^https?:\/\//.test(v) ? v : "https://" + v;
+}
+
+export const BASE_URL = normaliseBase(process.env.NEXT_PUBLIC_ASSAY_API);
 
 export const api = createClient({
   baseUrl: BASE_URL,
