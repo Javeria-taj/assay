@@ -86,7 +86,11 @@ export function Console({ data }: { data: ConsoleData }) {
         <WindowStrip window={shownWindow} onPrepareReport={() => setSheetOpen(true)} />
 
         <div className="wrap cols">
-          <Waterfall explanation={data.explanation} onOpenLine={setOpenLineId} />
+          <Waterfall
+            explanation={data.explanation}
+            zeroMdr={data.ceiling.zeroMdrExposure}
+            onOpenLine={setOpenLineId}
+          />
           <CeilingPanel ceiling={data.ceiling} />
         </div>
 

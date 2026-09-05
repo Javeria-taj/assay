@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import type { Citation, Explanation, ExplanationLine } from "@assay/contract";
+import type { Ceiling, Citation, Explanation, ExplanationLine } from "@assay/contract";
 import { Chip, Icon, Eyebrow } from "@/components/atoms";
 import { count, money, signed } from "@/lib/format";
 
@@ -71,9 +71,17 @@ const LEGEND: Array<{ kind: Citation["kind"]; cls: string; name: string; desc: s
 
 export function Waterfall({
   explanation,
+  zeroMdr,
   onOpenLine,
 }: {
   explanation: Explanation;
+  /**
+   * The zero-MDR exposure belongs to the ceiling's payload but renders at the
+   * foot of the trace, under the citation legend — the reference builds it
+   * inside `renderWaterfall`, and the wide column is the only place its
+   * four-step chain fits without wrapping.
+   */
+  zeroMdr: Ceiling["zeroMdrExposure"];
   onOpenLine: (lineId: string) => void;
 }) {
   /* Hovering a citation quiets every other kind, so provenance reads as a
@@ -246,6 +254,48 @@ export function Waterfall({
           </span>
         ))}
       </div>
+
+      {/* The fee levied on a rail the law says carries no network MDR. Legal,
+          disclosed in the plan, and on no report she is given. */}
+      <section className="zero" aria-label="Zero-MDR exposure">
+        <div className="zero__k">
+          <span>zero-MDR exposure</span>
+          <b>
+            {money(zeroMdr.feeLeviedOnZeroMdrRails, { paise: false })} a month ·{" "}
+            {money(zeroMdr.annualisedFee, { paise: false })} a year
+          </b>
+        </div>
+
+        <div className="hchain">
+          <div className="hstep">
+            <div className="hstep__v">{money(zeroMdr.grossOnZeroMdrRails, { paise: false })}</div>
+            <div className="hstep__t">moved on UPI from a bank account</div>
+          </div>
+          <div className="hstep hstep--mid">
+            <div className="hstep__v">0 bps network MDR</div>
+            <div className="hstep__t">by statute, on the prescribed electronic modes</div>
+          </div>
+          <div className="hstep hstep--mid">
+            <div className="hstep__v">
+              {(explanation.merchant.plan.headlineBps / 100).toFixed(2)}% flat plan
+            </div>
+            <div className="hstep__t">applied uniformly to every instrument</div>
+          </div>
+          <div className="hstep hstep--out">
+            <div className="hstep__v">{money(zeroMdr.feeLeviedOnZeroMdrRails, { paise: false })}</div>
+            <div className="hstep__t">fee levied on that slice</div>
+          </div>
+        </div>
+
+        <div className="zero__foot">
+          <p className="zero__body">{zeroMdr.note}</p>
+          <div className="zero__cites">
+            {zeroMdr.citations.map((c: Citation, i: number) => (
+              <Chip key={c.sourceId + i} citation={c} />
+            ))}
+          </div>
+        </div>
+      </section>
     </section>
   );
 }

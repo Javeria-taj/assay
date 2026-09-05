@@ -154,37 +154,6 @@ export function CeilingPanel({ ceiling: c }: { ceiling: Ceiling }) {
       {/* The fee levied on a rail the law says carries no network MDR.
           Legal, disclosed in the plan, and on no report she is given. */}
 
-      <section className="zero" aria-label="Zero-MDR exposure">
-        <div className="zero__k">
-          <span>zero-MDR exposure</span>
-          <b>
-            {money(z.feeLeviedOnZeroMdrRails, { paise: false })} a month · {money(z.annualisedFee, { paise: false })} a
-            year
-          </b>
-        </div>
-        <div className="hchain">
-          <div className="hstep">
-            <div className="hstep__v">{money(z.grossOnZeroMdrRails, { paise: false })}</div>
-            <div className="hstep__t">moved on UPI from a bank account</div>
-          </div>
-          <div className="hstep hstep--mid">
-            <div className="hstep__v">0 bps network MDR</div>
-            <div className="hstep__t">by statute, on the prescribed electronic modes</div>
-          </div>
-          <div className="hstep hstep--out">
-            <div className="hstep__v">{money(z.feeLeviedOnZeroMdrRails, { paise: false })}</div>
-            <div className="hstep__t">fee levied on that slice</div>
-          </div>
-        </div>
-        <div className="zero__foot">
-          <p className="zero__body">{z.note}</p>
-          <div className="zero__cites">
-            {z.citations.map((ci) => (
-              <Chip key={ci.sourceId} citation={ci} />
-            ))}
-          </div>
-        </div>
-      </section>
     </aside>
   );
 }
