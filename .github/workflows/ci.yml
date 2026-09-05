@@ -10,8 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # No `version:` here on purpose. package.json declares
+      # packageManager: pnpm@10.28.0, and pnpm/action-setup@v4 refuses when
+      # both are set — one source of truth for the pnpm version, and it is the
+      # same file that pins it for Render and for a local clone.
       - uses: pnpm/action-setup@v4
-        with: { version: 10 }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
 
@@ -31,3 +34,13 @@ jobs:
       # Every endpoint answers and validates against the shared contract.
       - name: contract conformance (mock)
         run: pnpm verify:mock
+
+      # The web app postdates this workflow. Without these two steps the whole
+      # console and landing page could break with CI still green.
+      - name: web typecheck
+        run: pnpm --filter @assay/web exec tsc --noEmit
+
+      - name: web build
+        run: pnpm --filter @assay/web build
+        env:
+          NEXT_PUBLIC_ASSAY_API: http://localhost:4318

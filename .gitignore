@@ -13,3 +13,6 @@ coverage/
 .DS_Store
 npm-debug.log*
 pnpm-debug.log*
+
+# The README-generation prompt. Working scaffolding, not project documentation.
+prompt.md
