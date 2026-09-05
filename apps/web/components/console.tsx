@@ -14,6 +14,7 @@ import { ForecastStrip } from "./forecast-strip";
 import { LineDrawer } from "./line-drawer";
 import { ReportSheet } from "./report-sheet";
 import { DemoSwitcher, type DemoWindowState } from "./demo-switcher";
+import { useReveal } from "@/lib/use-reveal";
 
 /**
  * The console, assembled.
@@ -27,6 +28,10 @@ export function Console({ data }: { data: ConsoleData }) {
   const [openLineId, setOpenLineId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [demo, setDemo] = useState<DemoWindowState>("live");
+
+  /* Plays the entrance cascade on load, and again whenever the demo switcher
+   * changes scene — the same points the reference replays it. */
+  useReveal(demo);
 
   const openLine: ExplanationLine | null =
     data.explanation.lines.find((l) => l.id === openLineId) ?? null;
