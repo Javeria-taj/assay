@@ -607,3 +607,34 @@
   #landing .recon__twist,#landing .recon__pct,#landing .recon__s,#landing .step__in,#landing .prod__ui,#landing .prod__said,#landing .prod__intro,#landing .gl,#landing .drawer,#landing .scrim,#landing .lab,#landing .leader{transition:none}
   #landing .loader i{animation:none}
 }
+
+/* --------------------------------------------------------------- no script
+   Everything scroll-driven is an enhancement, and this is what it degrades to.
+   The director sets `is-active`, `is-flat`, `is-twist` and `is-in`; without it
+   the steps stack on one another on a phone, the product ledger never fades in
+   and the twist never arrives. `.js` is on the root from the server — a class
+   added by a script after paint would either flash the curtain in late or
+   fight React over the same attribute — so the fallback is keyed on the
+   scripting capability itself: the sequences fall back to ordinary flow and
+   every reveal rests in its finished state, so the whole investigation still
+   reads top to bottom, object or no object. */
+@media (scripting: none){
+  #landing .loader{display:none}
+  #landing .hero__n .d,#landing .hero__h,#landing .hero__s,#landing .hero__acts,#landing .hero__meta{opacity:1}
+  #landing .seq--a,#landing .seq--b{display:block}
+  #landing .seq,#landing .seq--c,#landing .recon{min-height:0;height:auto}
+  #landing .seq__stage,#landing .recon__stage{position:static;height:auto}
+  #landing .seq__figure{display:none}
+  #landing .seq__steps{position:static;height:auto;margin-top:0;padding:0 var(--gutter);z-index:auto}
+  #landing .step{position:static;min-height:0;padding:28px 0;opacity:1;visibility:visible;overflow:visible}
+  #landing .step__in{opacity:1;max-width:none}
+  #landing .prod{height:auto;grid-template-columns:1fr}
+  #landing .prod__figure{display:none}
+  #landing .prod__intro{position:static;transform:none;max-width:none;margin-bottom:26px}
+  #landing .prod__said,#landing .prod__ui,#landing .recon__twist,
+  #landing .exp__gv,#landing .exp__gl,#landing .exp__gy,
+  #landing .brk__eq,#landing .brk__1,#landing .brk__2{opacity:1;transform:none}
+  #landing .exp__gap::before{transform:scaleY(1)}
+  #landing .exp__gap::after,#landing .exp__tick{opacity:1}
+  #landing .brk__rule{transform:scaleX(1)}
+}
