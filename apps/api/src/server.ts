@@ -1,23 +1,31 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { CONTRACT_VERSION, Health } from "@assay/contract";
-import { ApiProblem, SOURCE, envelope, onError, refuse, reply, type Vars } from "./envelope.js";
-import { SourceConfigError, createSource } from "./sources/index.js";
+import { CONTRACT_VERSION } from "@assay/contract";
+import { loadConfig } from "./config.js";
+import { createEngine } from "./engine-computed.js";
+import { ApiProblem, envelope, onError, refuse, type Vars } from "./envelope.js";
+import { registerRoutes, servedPaths } from "./routes/index.js";
+import { SourceConfigError } from "./sources/index.js";
 
 /**
  * The Assay API.
  *
  * Read-only by construction: every endpoint is a GET, and anything else is
- * refused before it reaches a route. This batch serves /v1/health only; the
- * rest of the contract lands in later batches.
+ * refused before it reaches a route. All nine contract endpoints are served
+ * here; `routes/index.ts` proves that against the contract's own `endpoints`
+ * object at startup rather than trusting this comment.
+ *
+ * This file is assembly only. It reads no environment variable of its own
+ * (`config.ts` does), computes no rupee (`engine/**` does), and shapes no
+ * response (`envelope.ts` does).
  */
 
 /* Resolved before the server binds a port. A source that cannot be read is a
  * refusal to start, not a request-time surprise. */
-const source = (() => {
+const config = (() => {
   try {
-    return createSource();
+    return loadConfig();
   } catch (e) {
     if (e instanceof SourceConfigError) {
       console.error("\n[assay:api] " + e.message + "\n");
@@ -27,23 +35,18 @@ const source = (() => {
   }
 })();
 
+const engine = createEngine(config.source);
+
 const app = new Hono<{ Variables: Vars }>();
 app.onError(onError);
-
-/* One origin in production. Localhost is added only outside it, so a deployed
- * API never answers a laptop. */
-const origins = [...new Set(
-  [process.env.ALLOWED_ORIGIN, process.env.NODE_ENV !== "production" ? "http://localhost:3000" : null]
-    .filter((o): o is string => typeof o === "string" && o.trim().length > 0)
-    .map((o) => o.trim().replace(/\/+$/, "")),
-)];
 
 /* CORS sits outside the envelope so that it decorates the finished response,
  * refusals included. */
 app.use(
   "*",
   cors({
-    origin: (origin) => (origins.includes(origin.replace(/\/+$/, "")) ? origin : null),
+    origin: (origin) =>
+      config.allowedOrigins.includes(origin.replace(/\/+$/, "")) ? origin : null,
     allowMethods: ["GET", "OPTIONS"],
     allowHeaders: ["authorization", "content-type"],
     maxAge: 86_400,
@@ -62,17 +65,7 @@ app.use("*", async (c, next) => {
 
 /* -------------------------------------------------------------- endpoints */
 
-app.get("/v1/health", (c) => {
-  /* Validated against the contract before it is sent: the API holds itself to
-   * the same schema the web app parses with. */
-  const health = Health.parse({
-    status: "ok",
-    contractVersion: CONTRACT_VERSION,
-    source: SOURCE,
-    serverNow: Date.now(),
-  });
-  return reply(c, health);
-});
+registerRoutes(app, engine, config);
 
 /* Last route: matches only what nothing above matched. */
 app.all("*", (c) => {
@@ -82,12 +75,17 @@ app.all("*", (c) => {
 
 /* ----------------------------------------------------------------- listen */
 
-const port = Number(process.env.PORT ?? 4318);
-
-serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }, (info) => {
+serve({ fetch: app.fetch, port: config.port, hostname: config.hostname }, (info) => {
   console.log("assay api  ·  http://localhost:" + info.port + "  ·  contract " + CONTRACT_VERSION);
-  console.log("  source " + SOURCE + " (" + source.kind + ")  ·  cors " + (origins.length ? origins.join(", ") : "(none allowed)"));
-  console.log("  GET /v1/health");
+  console.log(
+    "  source " +
+      config.sourceLabel +
+      " (" +
+      config.source.kind +
+      ")  ·  cors " +
+      (config.allowedOrigins.length ? config.allowedOrigins.join(", ") : "(none allowed)"),
+  );
+  for (const path of servedPaths()) console.log("  " + path);
 });
 
 export { app };

@@ -23,6 +23,7 @@ export interface InvariantCheck {
 import { waterfallCheck } from "./waterfall.js";
 import { ceilingCheck } from "./ceiling.js";
 import { crossCycleCheck } from "./cross-cycle.js";
+import { reportCheck } from "./report.js";
 
 /** Registered here so a stream fills its own file and nothing else. */
-export const checks: InvariantCheck[] = [waterfallCheck, ceilingCheck, crossCycleCheck];
+export const checks: InvariantCheck[] = [waterfallCheck, ceilingCheck, crossCycleCheck, reportCheck];

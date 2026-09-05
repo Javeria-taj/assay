@@ -15,6 +15,8 @@ import type { InvariantCheck } from "./index.js";
 
 const envelope = ok(Explanation);
 
+const describe = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
 /** Every violation names the line and both numbers, so a reader need not re-derive them. */
 const disagree = (what: string, a: number, b: number): string =>
   what + ": " + formatPaise(a) + " vs " + formatPaise(b);
@@ -129,19 +131,26 @@ export function checkWaterfall(e: Explanation): string[] {
 export const waterfallCheck: InvariantCheck = {
   name: "waterfall",
   async run(ctx) {
-    const body = await ctx.fetchJson(
-      buildPath("getExplanation", { settlementId: ctx.settlementId }),
-    );
-    const parsed = envelope.safeParse(body);
-    if (!parsed.success) {
-      return [
-        "waterfall: the response is not a valid Explanation envelope — " +
-          parsed.error.issues
-            .slice(0, 6)
-            .map((i) => i.path.join(".") + ": " + i.message)
-            .join("; "),
-      ];
+    try {
+      const body = await ctx.fetchJson(
+        buildPath("getExplanation", { settlementId: ctx.settlementId }),
+      );
+      const parsed = envelope.safeParse(body);
+      if (!parsed.success) {
+        return [
+          "waterfall: the response is not a valid Explanation envelope — " +
+            parsed.error.issues
+              .slice(0, 6)
+              .map((i) => i.path.join(".") + ": " + i.message)
+              .join("; "),
+        ];
+      }
+      return checkWaterfall(parsed.data.data);
+    } catch (e) {
+      /* A check never throws. An unexpected failure — a refused connection, a
+       * timeout, a body that is not JSON — is itself a problem string, or it
+       * takes down the table `verify-contract.ts` is trying to print. */
+      return ["waterfall: the check itself failed — " + describe(e)];
     }
-    return checkWaterfall(parsed.data.data);
   },
 };
